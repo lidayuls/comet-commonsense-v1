@@ -2,7 +2,7 @@ import sys
 import os
 
 sys.path.append(os.getcwd())
-
+sys.path.append("../..")
 import src.data.data as data
 from utils.utils import DD
 import utils.utils as utils
@@ -31,8 +31,8 @@ opt.exp = "generation"
 opt.data = DD()
 opt.data.categories = sorted(categories)
 
-encoder_path = "model/encoder_bpe_40000.json"
-bpe_path = "model/vocab_40000.bpe"
+encoder_path = "../../"+"model/encoder_bpe_40000.json"
+bpe_path = "../../"+"model/vocab_40000.bpe"
 
 text_encoder = TextEncoder(encoder_path, bpe_path)
 
@@ -47,14 +47,14 @@ for special_token in special:
     text_encoder.decoder[len(encoder)] = special_token
     encoder[special_token] = len(encoder)
 
-save_path = "data/atomic/processed/{}".format(opt.exp)
+save_path = "../../"+"data/atomic/processed/{}".format(opt.exp)
 utils.mkpath(save_path)
 
 save_name = os.path.join(
     save_path, "{}.pickle".format(utils.make_name_string(opt.data)))
 
 data_loader = data.make_data_loader(opt, categories)
-data_loader.load_data("data/atomic/")
+data_loader.load_data("../../"+"data/atomic/")
 random.shuffle(data_loader.data["dev"]["total"])
 
 data_loader.make_tensors(text_encoder, special, test=False)

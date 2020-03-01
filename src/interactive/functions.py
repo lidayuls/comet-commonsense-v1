@@ -23,8 +23,8 @@ def load_data(dataset, opt):
         data_loader = load_conceptnet_data(opt)
 
     # Initialize TextEncoder
-    encoder_path = "model/encoder_bpe_40000.json"
-    bpe_path = "model/vocab_40000.bpe"
+    encoder_path = "../../"+"model/encoder_bpe_40000.json"
+    bpe_path = "../../"+"model/vocab_40000.bpe"
     text_encoder = TextEncoder(encoder_path, bpe_path)
     text_encoder.encoder = data_loader.vocab_encoder
     text_encoder.decoder = data_loader.vocab_decoder
@@ -39,7 +39,7 @@ def load_atomic_data(opt):
         opt.data.maxe1 = 17
         opt.data.maxe2 = 35
         opt.data.maxr = 1
-    path = "data/atomic/processed/generation/{}.pickle".format(
+    path = "../../"+"data/atomic/processed/generation/{}.pickle".format(
         utils.make_name_string(opt.data))
     data_loader = data.make_data_loader(opt, opt.data.categories)
     loaded = data_loader.load_data(path)
@@ -115,7 +115,11 @@ def get_atomic_sequence(input_event, model, sampler, data_loader, text_encoder, 
 
             batch = set_atomic_inputs(
                 input_event, category, data_loader, text_encoder)
-
+#             batch = set_atomic_inputs_batch(
+#                 input_event, category, data_loader, text_encoder)
+            
+            #print(batch,)
+            
             sampling_result = sampler.generate_sequence(
                 batch, model, data_loader, data_loader.max_event +
                 data.atomic_data.num_delimiter_tokens["category"],
@@ -124,7 +128,7 @@ def get_atomic_sequence(input_event, model, sampler, data_loader, text_encoder, 
 
         sequence_all['beams'] = sampling_result["beams"]
 
-        print_atomic_sequence(sequence_all)
+        # print_atomic_sequence(sequence_all)
 
         return {category: sequence_all}
 
@@ -148,14 +152,36 @@ def set_atomic_inputs(input_event, category, data_loader, text_encoder):
     XMB = torch.zeros(1, data_loader.max_event + 1).long().to(cfg.device)
     prefix, suffix = data.atomic_data.do_example(text_encoder, input_event, None, True, None)
 
-    XMB[:, :len(prefix)] = torch.LongTensor(prefix)
+    #print(XMB,XMB.shape) # torch.Size([1, 18])
+    #print(prefix) # list
+    prefix = prefix[:XMB.size(1)]
+    
+    XMB[:, :len(prefix)] = torch.LongTensor(prefix) 
+    #print(XMB,XMB.shape) # torch.Size([1, 18])
+    
     XMB[:, -1] = torch.LongTensor([text_encoder.encoder["<{}>".format(category)]])
-
+    
     batch = {}
     batch["sequences"] = XMB
     batch["attention_mask"] = data.atomic_data.make_attention_mask(XMB)
 
     return batch
+
+
+# def set_atomic_inputs_batch(input_events, category, data_loader, text_encoder):
+#     XMB = torch.zeros(len(input_events), data_loader.max_event + 1).long().to(cfg.device)
+#     for idx,input_event in enumerate(input_events):
+#         prefix, suffix = data.atomic_data.do_example(text_encoder, input_event, None, True, None)
+#         prefix = prefix[:data_loader.max_event + 1]
+#         XMB[idx, :len(prefix)] = torch.LongTensor(prefix)
+#         XMB[idx, -1] = torch.LongTensor([text_encoder.encoder["<{}>".format(category)]])
+#         
+#     batch = {}
+#     batch["sequences"] = XMB
+#     batch["attention_mask"] = data.atomic_data.make_attention_mask(XMB)
+# 
+#     return batch
+
 
 
 def get_conceptnet_sequence(e1, model, sampler, data_loader, text_encoder, relation, force=False):

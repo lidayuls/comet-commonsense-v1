@@ -18,12 +18,12 @@ def getVec(We, words, t):
         vec = We[words[array[0]], :]
     else:
         vec = We[words['UUUNKKK'], :]
-        print 'can not find corresponding vector total:', array[0].lower()
+        print ('can not find corresponding vector total:', array[0].lower())
     for i in range(len(array)-1):
         if array[i+1] in words:
             vec = vec + We[words[array[i+1]], :]
         else:
-            print 'can not find corresponding vector some:', array[i+1].lower()
+            print ('can not find corresponding vector some:', array[i+1].lower())
             vec = vec + We[words['UUUNKKK'], :]
     vec = vec/len(array)
     return vec
@@ -50,29 +50,29 @@ def score(term1, term2, words, We, rel, Rel, Weight, Offset, evaType):
     if(evaType.lower() == 'max'):
         result = sorted(result.items(),  key=lambda x: x[1],  reverse = True)
         for k, v in result[:1]:
-            print k,  'score:',  v
+            print (k,  'score:',  v)
         return result[:1]
     if(evaType.lower() == 'topfive'):
         result = sorted(result.items(),  key=lambda x: x[1],  reverse = True)
         for k, v in result[:5]:
-            print k,  'score:',  v
+            print (k,  'score:',  v)
         return result[:5]
     if(evaType.lower() == 'sum'):
         result = sorted(result.items(),  key=lambda x: x[1],  reverse = True)
         total = 0
         for i in result:
             total = total + i[1]
-        print 'total score is:', total
+        print ('total score is:', total)
         return total
     if(evaType.lower() == 'all'):
         result = sorted(result.items(),  key=lambda x: x[1],  reverse = True)
         for k, v in result[:]:
-            print k,  'score:',  v
+            print (k,  'score:',  v)
         return result
     else:
         tar_rel = evaType.lower()
         if result.get(tar_rel) == None:
-            print 'illegal relation,  please re-enter a valid relation'
+            print ('illegal relation,  please re-enter a valid relation')
             return 'None'
         else:
             return result.get(tar_rel)

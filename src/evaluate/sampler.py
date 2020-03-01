@@ -36,38 +36,52 @@ class GreedySampler(Sampler):
     def generate_sequence(self, batch, model, data_loader, start_idx, end_len):
         XMB = batch["sequences"][:, :start_idx]
         MMB = batch["attention_mask"][:, :start_idx]
-
+        
+        #print(XMB,XMB.shape)
+        
         XMB = model_utils.prepare_position_embeddings(
             self.opt, data_loader.vocab_encoder, XMB.unsqueeze(-1))
-
+        
+        #print(XMB,XMB.shape)
+        
         lm_probs = F.log_softmax(model(
             XMB.unsqueeze(1), sequence_mask=MMB), dim=-1)
+        
+#         print(XMB,XMB.shape) # torch.Size([bsz, 18, 2]) 
 
         values, indices = lm_probs[:, -1, :].max(dim=-1)
+#         print(indices,indices.shape)  # torch.Size([bsz])
+        
         seqs = indices.clone().unsqueeze(1)
-
+#         print(seqs,seqs.shape) # torch.Size([bsz, 1])
+        
         loss = values
         counts = 1
         next_pos = XMB[:, -1:, 1] + 1
         next_x = torch.cat((indices.view(-1, 1), next_pos), -1).unsqueeze(1)
         XMB = torch.cat((XMB, next_x), 1)
         MMB = torch.cat([MMB, torch.ones(XMB.size(0), 1, device=MMB.device)], 1)
-
+#         print(XMB,XMB.shape) # torch.Size([bsz, 19, 2])
+        
         # Sample from top k
-
+#         print(self.opt.eval.smax) # 40
         for _ in range(self.opt.eval.smax):
             lm_probs = F.log_softmax(model(
                 XMB.unsqueeze(1), sequence_mask=MMB), dim=-1)
 
             # Sample from top k
             values, next_idx = lm_probs[:, -1, :].max(dim=-1)
-
+#             print(values,values.shape) # torch.Size([3])
+#             print(next_idx,next_idx.shape) # torch.Size([3])
+            
             loss += values
             counts += 1
 
             next_idx = next_idx.unsqueeze(1)
+#             print(next_idx,next_idx.shape) # torch.Size([3, 1])
 
             seqs = torch.cat([seqs, next_idx], 1)
+#             print(seqs,seqs.shape) # torch.Size([bsz, ����])
 
             if (next_idx.item() == self.end_token) or (_ == end_len - 1):
                 break
@@ -75,7 +89,8 @@ class GreedySampler(Sampler):
             XMB, MMB = self.append_batch(XMB, next_idx, MMB)
 
         beams = []
-
+        
+#         print(seqs,seqs.shape) # torch.Size([bsz, 1])
         for beam in seqs:
             beams.append(" ".join("".join(
                 [data_loader.vocab_decoder[tok.item()].replace(
@@ -321,5 +336,5 @@ class BeamSampler(TopKSampler):
             "beam_lengths": counts.tolist(),
             "length": counts[0].item()
         }
-
+        #print(sampling_result)
         return sampling_result
