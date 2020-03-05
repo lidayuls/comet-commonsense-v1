@@ -22,8 +22,8 @@ if __name__ == "__main__":
     parser.add_argument("--category", type=str, default="all", help = "all, oEffect, oReact, oWant, xAttr, xEffect, xIntent, xNeed, xReact, xWant")
     parser.add_argument("--model_file", type=str, default="../../"+"pretrained_models/atomic_pretrained_model.pickle")
     parser.add_argument("--sampling_algorithm", type=str, default="beam-5", help = "greedy/beam-# where # is the beam size/topk-# where # is k")
-    parser.add_argument("--input_file", type=str, default="../../Dataset/SemEval19EmoContext/SemEval19EmoContext_json_tokenized.json")
-    parser.add_argument("--output_file", type=str, default="../../Dataset/SemEval19EmoContext/SemEval19EmoContext_comet_40000_.json")
+    parser.add_argument("--input_file", type=str, default="../../Dataset/DailyDialog/DailyDialog_json.json")
+    parser.add_argument("--output_file", type=str, default="../../Dataset/DailyDialog/DailyDialog_comet_10000_20000.json")
 
 
     args = parser.parse_args()
@@ -59,17 +59,17 @@ if __name__ == "__main__":
     for dataname,data in corpus.items():
         print(dataname)
         for i,d in enumerate(data):
-            #if d["label"] == "others":continue
+
+            #if len(set(d["labels"])) == 1 : continue
             # utterances = d["utterances"]
             # for u in utterances:
             #     list_of_input_events.append(u)
             
-            if d["label"] == "others":
+            if len(set(d["labels"])) == 1:
                 utterances = d["utterances"]
                 for u in utterances:
                     list_of_input_events.append(u)
-
-                
+    
     news_list_of_input_events = []
     for i in list_of_input_events:
         if i not in news_list_of_input_events:
@@ -77,15 +77,12 @@ if __name__ == "__main__":
     list_of_input_events = news_list_of_input_events
 
     #list_of_input_events = list(set(list_of_input_events))
-
-
-    
-    list_of_input_events = list_of_input_events[40000:]
+    list_of_input_events = list_of_input_events[10000:20000]
     
     print(len(list_of_input_events))
     print(list_of_input_events[:5])
-    
-    
+
+
     output_file = open(args.output_file, 'a', encoding = 'utf-8')
 
     for idx, sentence in enumerate(list_of_input_events):
